@@ -41,19 +41,20 @@ pub fn make_archive(path string) ! {
 	for _ in username.len .. 32 {
 		contents += '\0'
 	}
-
+	
+	// TODO get group name instead
 	contents += '${username}'
 	for _ in username.len .. 33 {
 		contents += '\0'
 	}
+
+	// TODO add checks for extra header stuff
 	for _ in 0 .. 182 {
 		contents += '\0'
 	}
 
 	sum := chksum(contents)
-	// println('${sum:o}')
 	contents = contents.replace('        ', '${sum:06o}\0 ')
-	// println(contents)
 
 	msg := os.read_file(path)!
 
