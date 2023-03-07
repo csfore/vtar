@@ -19,9 +19,9 @@ pub fn make_archive(path string) ! {
 	contents += name
 
 	mode := os.inode(path).bitmask()
-	contents += '0000${mode:o}\0'
-	contents += '000${os.getuid():o}\0'
-	contents += '000${os.getgid():o}\0'
+	contents += '${mode:07o}\0'
+	contents += '${os.getuid():07o}\0'
+	contents += '${os.getgid():07o}\0'
 	contents += '${os.file_size(path):011o}\0'
 	contents += '${os.file_last_mod_unix(path):o}\0'
 
@@ -52,7 +52,7 @@ pub fn make_archive(path string) ! {
 
 	sum := chksum(contents)
 	// println('${sum:o}')
-	contents = contents.replace('        ', '0${sum:o}\0 ')
+	contents = contents.replace('        ', '${sum:06o}\0 ')
 	// println(contents)
 
 	msg := os.read_file(path)!
