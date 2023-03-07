@@ -16,9 +16,10 @@ import vtar
 // }
 
 fn main() {
-	path := './one'
+	files := ['one', 'two']
+	output := './out.tar'
 
-	vtar.make_archive(path) or {
+	vtar.make_archive(output, files) or {
 		eprintln('err')
 		return
 	}

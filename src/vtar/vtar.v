@@ -1,66 +1,72 @@
 module vtar
 import os
 
-pub fn make_archive(path string) ! {
-
-
+pub fn make_archive(output string, files []string) ! {
 	mut contents := ''
 
-	mut name := os.file_name(path)
-	// tmp := name.bytes()
+	for file in files {
 
-	// for i in tmp {
-	// 	println('${i:X}')
-	// }
+		mut name := os.file_name(file)
+		// tmp := name.bytes()
 
-	for _ in name.len .. 100 {
-		name += '\0'
-	}
-	contents += name
+		// for i in tmp {
+		// 	println('${i:X}')
+		// }
 
-	mode := os.inode(path).bitmask()
-	contents += '${mode:07o}\0'
-	contents += '${os.getuid():07o}\0'
-	contents += '${os.getgid():07o}\0'
-	contents += '${os.file_size(path):011o}\0'
-	contents += '${os.file_last_mod_unix(path):o}\0'
+		for _ in name.len .. 100 {
+			name += '\0'
+		}
+		contents += name
 
-	
-	// ${sum:o}
-	contents += '        ' // checksum placeholder
-	contents += '0'
-	for _ in 0..100 {
-		contents += '\0'
-	}
-	contents += 'ustar'
-	contents += '  \0'
+		mode := os.inode(file).bitmask()
+		contents += '${mode:07o}\0'
+		contents += '${os.getuid():07o}\0'
+		contents += '${os.getgid():07o}\0'
+		contents += '${os.file_size(file):011o}\0'
+		contents += '${os.file_last_mod_unix(file):o}\0'
 
-	username := os.loginname()
+		
+		// ${sum:o}
+		contents += '        ' // checksum placeholder
+		contents += '0'
+		for _ in 0..100 {
+			contents += '\0'
+		}
+		contents += 'ustar'
+		contents += '  \0'
 
-	contents += '${username}'
-	for _ in username.len .. 32 {
-		contents += '\0'
-	}
-	
-	// TODO get group name instead
-	contents += '${username}'
-	for _ in username.len .. 33 {
-		contents += '\0'
-	}
+		username := os.loginname()
 
-	// TODO add checks for extra header stuff
-	for _ in 0 .. 182 {
-		contents += '\0'
-	}
+		contents += '${username}'
+		for _ in username.len .. 32 {
+			contents += '\0'
+		}
+		
+		// TODO get group name instead
+		contents += '${username}'
+		for _ in username.len .. 33 {
+			contents += '\0'
+		}
 
-	sum := chksum(contents)
-	contents = contents.replace('        ', '${sum:06o}\0 ')
+		// TODO add checks for extra header stuff
+		for _ in 0 .. 182 {
+			contents += '\0'
+		}
 
-	msg := os.read_file(path)!
+		mut header := contents
+		println(header)
+		sum := chksum(header)
 
-	contents += os.read_file(path)!
-	for _ in msg.len .. 512 {
-		contents += '\0'
+		contents = contents.replace('        ', '${sum:06o}\0 ')
+
+		msg := os.read_file(file)!
+
+		contents += os.read_file(file)!
+		for _ in msg.len .. 512 {
+			contents += '\0'
+		}
+
+		header = ''
 	}
 
 	// println(contents.len)
@@ -69,7 +75,13 @@ pub fn make_archive(path string) ! {
 		contents += '\0'
 	}
 
-	os.write_file('./out.tar', contents) or {
+	mut out := output
+
+	if out == '' {
+		out = './out.tar'
+	}
+
+	os.write_file(out, contents) or {
 		eprintln('error')
 		return
 	}
