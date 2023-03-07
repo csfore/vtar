@@ -1,3 +1,11 @@
+# Output file
 *.tar
+
+# Directory to test
 test/
 *.txt
+
+# Test files
+one
+two
+three
