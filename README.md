@@ -12,4 +12,4 @@ unless you are willing to report issues.
 
 ## License
 
-MIT @ Christopher Fore 2023
+BSD-3-Clause license @ Christopher Fore 2023
