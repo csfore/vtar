@@ -4,6 +4,12 @@ import os
 pub fn make_archive(output string, files []string) ! {
 	mut contents := ''
 
+	if os.exists(output) {
+		os.rm(output)!
+	}
+
+	mut tar_out := os.open_append(output)!
+
 	for file in files {
 
 		mut name := os.file_name(file)
@@ -53,9 +59,9 @@ pub fn make_archive(output string, files []string) ! {
 			contents += '\0'
 		}
 
-		mut header := contents
-		println(header)
-		sum := chksum(header)
+		// mut header := contents
+		// println(header)
+		sum := chksum(contents)
 
 		contents = contents.replace('        ', '${sum:06o}\0 ')
 
@@ -66,28 +72,31 @@ pub fn make_archive(output string, files []string) ! {
 			contents += '\0'
 		}
 
-		header = ''
+		// header = ''
+		tar_out.write_string(contents)!
+		contents = ''
 	}
 
 	// println(contents.len)
 
 	for _ in 0 .. 9216 {
-		contents += '\0'
+		tar_out.write_string('\0')!
 	}
 
-	mut out := output
+	// mut out := output
 
-	if out == '' {
-		out = './out.tar'
-	}
+	// if out == '' {
+	// 	out = './out.tar'
+	// }
 
-	os.write_file(out, contents) or {
-		eprintln('error')
-		return
-	}
+	// os.write_file(out, contents) or {
+	// 	eprintln('error')
+	// 	return
+	// }
 }
 
 fn chksum(bytes string) int {
+	println(bytes)
 	mut sum := 0
 
 	for i in 0 .. bytes.len {
