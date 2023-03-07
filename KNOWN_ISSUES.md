@@ -1,3 +1,3 @@
 # Known Issues
 
-- [ ] Multi-file adding works but the checksum is incorrect
+- [x] Multi-file adding works but the checksum is incorrect
