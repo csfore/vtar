@@ -1,6 +1,9 @@
 module vtar
 import os
 
+// make_archive takes files in an array of strings and prepares them for
+// the GNU tar format
+
 pub fn make_archive(output string, files []string) ! {
 	mut contents := ''
 
@@ -96,7 +99,6 @@ pub fn make_archive(output string, files []string) ! {
 }
 
 fn chksum(bytes string) int {
-	println(bytes)
 	mut sum := 0
 
 	for i in 0 .. bytes.len {
