@@ -1,5 +1,70 @@
 module vtar
 import os
+import strconv
+
+enum HeaderType {
+	gnu
+	oldgnu
+	posix
+	v7
+	ustar
+}
+
+pub fn extract_archive(path string) ! {
+	bytes := os.read_bytes(path)!
+	// println(bytes)
+	// mut position := 0
+
+	mut tmp := []string{}
+	// mut file := [][]string{}
+
+	for ch in bytes {
+		// println(header_pos)
+		if ch == `\0` {
+			if tmp.last() != '.' {
+				tmp << '.'
+				continue
+			}
+			continue
+		}
+		tmp << ch.ascii_str()
+		// println(tmp)
+	}
+	mut file := tmp.join('').split('.')
+	file.insert(12, '|')
+	// println(file)
+	file_info := {
+		'name':		file[0]
+		'mask':		file[1]
+		'uid':		file[2]
+		'gid':		file[3]
+		'size':		file[4]
+		'time':		file[5]
+		'chksum':	file[6]
+		'typeflag':	file[8]
+		'user':		file[9]
+		'group':	file[10]
+		'contents':	file[11]
+	}
+	// println(file_info)
+	os.write_file('${os.dir(path)}/${file_info['name']}', file_info['contents'])!
+
+	// println(file_info['mask'][4..7])
+
+	mask := int(strconv.parse_int(file_info['mask'][4..7], 8, 16)!)
+	os.chmod('${os.dir(path)}/${file_info['name']}', mask)!
+
+	time := int(strconv.parse_int(file_info['time'], 8, 64)!)
+	os.utime('${os.dir(path)}/${file_info['name']}', time, time)!
+
+	uid := int(strconv.parse_int(file_info['uid'], 8, 16)!)
+	gid := int(strconv.parse_int(file_info['gid'], 8, 16)!)
+
+	if os.getuid() != uid || os.getgid() != gid {
+		os.chown('${os.dir(path)}/${file_info['name']}', file_info['uid'].int(), file_info['gid'].int())!
+	}
+	
+}
 
 // make_archive takes files in an array of strings and prepares them for
 // the GNU tar format
@@ -7,6 +72,7 @@ import os
 pub fn make_archive(output string, files []string) ! {
 	mut contents := ''
 
+	// TODO Find a better way to get around an archive with the same name
 	if os.exists(output) {
 		os.rm(output)!
 	}
@@ -16,11 +82,6 @@ pub fn make_archive(output string, files []string) ! {
 	for file in files {
 
 		mut name := os.file_name(file)
-		// tmp := name.bytes()
-
-		// for i in tmp {
-		// 	println('${i:X}')
-		// }
 
 		for _ in name.len .. 100 {
 			name += '\0'
@@ -34,8 +95,6 @@ pub fn make_archive(output string, files []string) ! {
 		contents += '${os.file_size(file):011o}\0'
 		contents += '${os.file_last_mod_unix(file):o}\0'
 
-		
-		// ${sum:o}
 		contents += '        ' // checksum placeholder
 		contents += '0'
 		for _ in 0..100 {
@@ -44,7 +103,7 @@ pub fn make_archive(output string, files []string) ! {
 		contents += 'ustar'
 		contents += '  \0'
 
-		username := os.loginname()
+		username := os.loginname()!
 
 		contents += '${username}'
 		for _ in username.len .. 32 {
@@ -62,8 +121,6 @@ pub fn make_archive(output string, files []string) ! {
 			contents += '\0'
 		}
 
-		// mut header := contents
-		// println(header)
 		sum := chksum(contents)
 
 		contents = contents.replace('        ', '${sum:06o}\0 ')
@@ -85,17 +142,6 @@ pub fn make_archive(output string, files []string) ! {
 	for _ in 0 .. 9216 {
 		tar_out.write_string('\0')!
 	}
-
-	// mut out := output
-
-	// if out == '' {
-	// 	out = './out.tar'
-	// }
-
-	// os.write_file(out, contents) or {
-	// 	eprintln('error')
-	// 	return
-	// }
 }
 
 fn chksum(bytes string) int {

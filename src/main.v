@@ -1,26 +1,21 @@
+/*
+ * Just an example main file, not necessary for core functionality
+*/
+
+// Command to make a file with random contents
+// openssl rand -out test_one -base64 $(( 2**16 * 3/4 ))
+
 module main
-// import os
 import vtar
 
-// struct TarHeader {
-// 	name string
-// 	mode int
-// 	uid int
-// 	gid int
-// 	size int
-// 	mtime int
-// 	chksum int
-// 	typeflag string
-// 	user string
-// 	group string
-// }
-
 fn main() {
-	files := ['one', 'two']
-	output := './out.tar'
+	// files := ['one']
+	// output := './out.tar'
 
-	vtar.make_archive(output, files) or {
-		eprintln('err')
-		return
-	}
+	// vtar.make_archive(output, files) or {
+	// 	eprintln('err')
+	// 	return
+	// }
+	tar_in := './exttest/out.tar'
+	vtar.extract_archive(tar_in)!
 }
