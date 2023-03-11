@@ -1,3 +1,5 @@
+vtar
+
 # Output file
 *.tar
 
@@ -9,7 +11,7 @@ test/
 one
 two
 three
-test_one
-test_two
+test_one.tmp
+test_two.tmp
 
 old_code
