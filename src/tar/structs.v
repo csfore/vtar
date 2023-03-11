@@ -2,7 +2,7 @@
  * NOT CURRENTLY USED
 **/
 
-module vtar
+module tar
 
 struct TarHeader {
 	name string

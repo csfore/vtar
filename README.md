@@ -15,6 +15,8 @@ unless you are willing to report issues.
 Currently, my plan is to implement archive reading/writing for the headers
 one at a time to ensure they are usable on each addition
 
+Currently focusing on: **GNU TAR Header compatibility**
+
 ## License
 
 BSD-3-Clause license @ Christopher Fore 2023

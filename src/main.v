@@ -6,16 +6,20 @@
 // openssl rand -out test_one -base64 $(( 2**16 * 3/4 ))
 
 module main
-import vtar
+import tar
+import os
 
 fn main() {
-	// files := ['one']
-	// output := './out.tar'
+	files := ['one', 'two', 'three']
+	output := './out.tar'
 
-	// vtar.make_archive(output, files) or {
-	// 	eprintln('err')
-	// 	return
-	// }
+	tar.make_archive(output, files) or {
+		eprintln('err')
+		return
+	}
+
+	os.cp('./out.tar', './exttest/out.tar')!
+
 	tar_in := './exttest/out.tar'
-	vtar.extract_archive(tar_in)!
+	tar.extract_archive(tar_in)!
 }
