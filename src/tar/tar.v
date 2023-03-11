@@ -52,11 +52,14 @@ pub fn extract_archive(path string) ! {
 		mut unpack := unpack_header(bytes)!
 		bytes.delete_many(0, 512)
 		mut ctmp := ''
-		for b in bytes {
-			if b == `\0` {
+
+		block_size := 16
+		for i in 0..bytes.len-1 {
+			if i == `\0` {
 				break
 			}
 			ctmp += b.ascii_str()
+			i += 16
 		}
 		unpack['contents'] = ctmp
 		ctmp = ''
