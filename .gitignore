@@ -7,6 +7,9 @@ vtar
 test/
 *.txt
 
+exttest/
+testdata/
+
 # Test files
 one
 two

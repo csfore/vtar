@@ -10,7 +10,7 @@ import tar
 import os
 
 fn main() {
-	files := ['one', 'two', 'three']
+	files := ['./testdata/big_one', './testdata/big_two']
 	output := './out.tar'
 
 	tar.make_archive(output, files) or {

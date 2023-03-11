@@ -31,10 +31,11 @@ const (
 pub fn extract_archive(path string) ! {
 
 	mut bytes := os.read_bytes(path)!
-
+	mut num_files := calculate_file_count(bytes)!
+	// println('Files: $num_files')
 	mut tmp := u8(1)
 	mut index := 0
-	mut num_files := 0
+	// mut num_files := 0
 	for {
 		// println(bytes[index])
 		tmp = bytes[index]
@@ -48,30 +49,44 @@ pub fn extract_archive(path string) ! {
 
 	mut files := []map[string]string{}
 
-	for _ in 0..num_files {
+	for i in 0..2 {
+		num_files = 2
+		// println(files)
 		mut unpack := unpack_header(bytes)!
 		bytes.delete_many(0, 512)
-		mut ctmp := ''
+		// mut ctmp := ''
 
-		block_size := 16
-		for i in 0..bytes.len-1 {
-			if i == `\0` {
-				break
-			}
-			ctmp += b.ascii_str()
-			i += 16
-		}
-		unpack['contents'] = ctmp
-		ctmp = ''
+		// block_size := 32
+		// mut byte_index := 0
+		content_size := int(strconv.parse_int(unpack['size'], 8, 64)!)
+		// println(content_size)
+		unpack['contents'] = bytes[0..content_size].bytestr()
+		// println(unpack)
+		bytes.delete_many(0, content_size)
+		// println(bytes.bytestr())
+		// ctmp = ''
 		// println(bytes.bytestr())
 		// println(unpack)
 		files << unpack
+		// println('uh')
+
+		// for file in files {
+		// 	println(file['name'])
+		// }
+
+		// println('$i, $num_files')
+
+		if i == num_files-1 {
+			break
+		}
 		for bytes.first() == `\0` {
 			bytes.delete(0)
 		}
-		bytes.delete_many(0, 512)
+		// bytes.delete_many(0, 512)
 		// println('Checkpoint: ${bytes.bytestr()}')
 	}
+
+	// println('escaped')
 	for file in files {
 		os.write_file('${os.dir(path)}/${file['name']}', file['contents'])!
 
@@ -97,6 +112,28 @@ pub fn extract_archive(path string) ! {
 	}
 
 	
+}
+
+fn calculate_file_count(bytes []u8) !int {
+	mut tmp := bytes.clone()
+	mut i := 0
+	mut num := 0
+
+	for {
+		h := unpack_header(tmp)!
+		size := int(strconv.parse_int(h['size'], 8, 64)!)
+		tmp.delete_many(0, 512)
+		tmp.delete_many(i, i+size)
+		if size < 512 {
+			tmp.delete_many(i, 512-size)
+		}
+		if tmp.filter(it != `\0`).len == 0 {
+			break
+		}
+		num++
+	}
+	return num
+
 }
 
 fn unpack_header(header []u8) !map[string]string {
@@ -205,7 +242,7 @@ pub fn make_archive(output string, files []string) ! {
 		}
 
 		// header = ''
-		tar_out.write_string(contents)!
+		tar_out.write(contents.bytes())!
 		contents = ''
 	}
 
