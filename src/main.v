@@ -10,16 +10,20 @@ import tar
 import os
 
 fn main() {
-	files := ['./testdata/big_one', './testdata/big_two']
+	files := ['test/']
 	output := './out.tar'
+	mut attr := C.stat{}
+	unsafe { C.stat(&char(files[0].str), &attr) }
+	// println('${attr}')
+	// println('${attr.st_mode:o}')
 
 	tar.make_archive(output, files) or {
-		eprintln('err')
+		eprintln('err $err')
 		return
 	}
 
-	os.cp('./out.tar', './exttest/out.tar')!
+	// os.cp('./out.tar', './exttest/out.tar')!
 
-	tar_in := './exttest/out.tar'
-	tar.extract_archive(tar_in)!
+	// tar_in := './exttest/out.tar'
+	// tar.extract_archive(tar_in)!
 }

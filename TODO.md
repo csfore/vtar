@@ -2,6 +2,11 @@
 
 Current tar parity: `~1%`
 
+## General
+
+- [ ] Better Organization
+  - Planned after directory support is added
+
 ## Header Formats
 
 - [ ] GNU*

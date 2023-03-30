@@ -189,23 +189,167 @@ pub fn make_archive(output string, files []string) ! {
 	mut tar_out := os.open_append(output)!
 
 	for file in files {
+		// mut file_type := 0
+		contents += add_file(file, mut tar_out)!
 
-		mut name := os.file_name(file)
+		// if os.is_dir(file) {
+		// 	// file_type = 
+		// 	subfiles := os.ls(file)!
+		// 	add_directory(subfiles, mut tar_out)!
+		// } else {
+		// 	add_file(file, mut tar_out)!
+		// }
+	}
+
+	// println(contents.len)
+	tar_out.write_string(contents)!
+
+	for _ in 0 .. 9216 {
+		tar_out.write_string('\0')!
+	}
+}
+
+// fn add_main(file string, mut output os.File) ! {
+// 	if os.is_dir(file) {
+// 		add_directory(file, mut output)!
+// 	}
+// 	add_file(file, mut output)
+// }
+
+fn add_directory(directory string, mut output os.File) !string {
+	// files := []string{}
+	// pfiles := &files
+	// println(path)
+	mut contents := ''
+	mut name := os.dir(directory) + '/'
+	// println(name)
+	for _ in name.len .. 100 {
+		name += '\0'
+	}
+	mut attr := C.stat{}
+	unsafe { C.stat(&char(name.str), &attr) }
+	// println(attr)
+	contents += '$name'
+	mode := '${attr.st_mode:o}'[1..5]
+	// println('${mode:07o}')
+	contents += '${mode}\0'
+	contents += '${attr.st_uid:07o}\0'
+	contents += '${attr.st_gid:07o}\0'
+	contents += '00000000000\0'
+	contents += '${attr.st_mtime:o}\0'
+	contents += '        ' // checksum placeholder
+	contents += '5\0'
+	for _ in 0..100 {
+		contents += '\0'
+	}
+	contents += 'ustar'
+	contents += '  \0'
+	username := os.loginname()!
+
+	contents += '${username}'
+	for _ in username.len .. 32 {
+		contents += '\0'
+	}
+	
+	// TODO get group name instead
+	contents += '${username}'
+	for _ in username.len .. 33 {
+		contents += '\0'
+	}
+
+	for _ in 0 .. 182 {
+		contents += '\0'
+	}
+	dump(contents)
+	return contents
+	// println(name.bytes())
+	// println(path)
+	// for file in path {
+	// 	if os.is_dir(file) {
+	// 		add_directory(subfiles, mut output)!
+	// 	}
+	// 	add_file(file, mut output)!
+	// }
+	// os.walk(path, fn [mut output] (file string) {
+	// 	add_file(file, mut output) or {
+	// 		eprintln('err')
+	// 		return
+	// 	}
+	// })
+}
+
+
+
+fn add_file(path string, mut tar_out os.File) !string {
+	mut contents := ''
+	mut files := [path]
+
+	// for files.len > 0 {
+		
+	// }
+
+	for file in files {
+		mut attr := C.stat{}
+		unsafe { C.stat(&char(file.str), &attr) }
+		// println(attr)
+		// println('${attr.st_mode:o}'[1..6])
+		mut mode := '${attr.st_mode:o}'
+
+		mut name := file
+		// mut dir_check := false
+		if os.is_dir(file) {
+			contents += add_directory(file, mut tar_out)!
+			// dir_check = true
+			// files.clear()
+			mut pfiles := &files
+			os.walk(file, fn [mut pfiles] (file string) {
+				println(file)
+				pfiles << file
+			})
+			// println(files)
+			if files.len == 0 {
+				return contents
+			}
+			new_file := files[0]
+			// dump(contents)
+			files.delete(0)
+			contents += add_file(new_file, mut tar_out)!
+			// for i, j in files {
+			// 	files[i] = '$file' + j
+			// }
+			mode = '${mode[1..5]:07}'
+		} else if os.is_file(file) {
+			mode = mode[1..6]
+		}
+		println(files)
+		// mut contents := ''
+		// mut name := file
+
+		// if file_type == 5 {
+		// 	name = file
+		// }
+		
 
 		for _ in name.len .. 100 {
 			name += '\0'
 		}
 		contents += name
 
-		mode := os.inode(file).bitmask()
-		contents += '${mode:07o}\0'
-		contents += '${os.getuid():07o}\0'
-		contents += '${os.getgid():07o}\0'
-		contents += '${os.file_size(file):011o}\0'
-		contents += '${os.file_last_mod_unix(file):o}\0'
+		
+		println(mode)
+		contents += '${mode:07}\0'
+		contents += '${attr.st_uid:07o}\0'
+		contents += '${attr.st_gid:07o}\0'
+		contents += '${attr.st_size:011o}\0'
+		contents += '${attr.st_mtime:o}\0'
 
 		contents += '        ' // checksum placeholder
 		contents += '0'
+		// if file_type == 0 {
+		// 	contents += '0'
+		// } else if file_type == 5 {
+		// 	contents += '5'
+		// }
 		for _ in 0..100 {
 			contents += '\0'
 		}
@@ -233,24 +377,33 @@ pub fn make_archive(output string, files []string) ! {
 		sum := chksum(contents)
 
 		contents = contents.replace('        ', '${sum:06o}\0 ')
-
+		// println(contents)
+		if os.is_dir(file) {
+			continue
+		}
 		msg := os.read_file(file)!
 
-		contents += os.read_file(file)!
+		contents += msg
+
 		for _ in msg.len .. 512 {
 			contents += '\0'
 		}
 
-		// header = ''
-		tar_out.write(contents.bytes())!
-		contents = ''
+		// if file_type == 0 {
+			// msg := os.read_file(file)!
+			// contents += os.read_file(file)!
+			// for _ in msg.len .. 512 {
+			// 	contents += '\0'
+			// }
 	}
+	return contents
 
-	// println(contents.len)
+	// println(files)
+	
 
-	for _ in 0 .. 9216 {
-		tar_out.write_string('\0')!
-	}
+	// 	// header = ''
+	// // }
+	// tar_out.write(contents.bytes())!
 }
 
 fn chksum(bytes string) int {
