@@ -2,6 +2,8 @@
 
 Current tar parity: `~1%`
 
+- Move the tar extract header stuff to using the `C.stat()` function
+
 ## General
 
 - [ ] Better Organization

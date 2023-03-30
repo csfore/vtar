@@ -1,11 +1,12 @@
 /*
- * Just an example main file, not necessary for core functionality
+* Just an example main file, not necessary for core functionality
 */
 
 // Command to make a file with random contents
 // openssl rand -out test_one -base64 $(( 2**16 * 3/4 ))
 
 module main
+
 import tar
 import os
 
@@ -18,7 +19,7 @@ fn main() {
 	// println('${attr.st_mode:o}')
 
 	tar.make_archive(output, files) or {
-		eprintln('err $err')
+		eprintln('err ${err}')
 		return
 	}
 

@@ -1,5 +1,5 @@
 /*
- * NOT CURRENTLY USED
+* NOT CURRENTLY USED
 **/
 
 // module main

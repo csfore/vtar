@@ -1,4 +1,5 @@
 module tar
+
 import os
 import strconv
 
@@ -11,16 +12,16 @@ enum HeaderType {
 }
 
 struct FileInfo {
-	name string
-	mask int
-	uid int
-	gid int
-	size int
-	time int
-	chksum int
+	name     string
+	mask     int
+	uid      int
+	gid      int
+	size     int
+	time     int
+	chksum   int
 	typeflag string
-	user string
-	group string
+	user     string
+	group    string
 	contents string
 }
 
@@ -29,7 +30,6 @@ const (
 )
 
 pub fn extract_archive(path string) ! {
-
 	mut bytes := os.read_bytes(path)!
 	mut num_files := calculate_file_count(bytes)!
 	// println('Files: $num_files')
@@ -49,7 +49,7 @@ pub fn extract_archive(path string) ! {
 
 	mut files := []map[string]string{}
 
-	for i in 0..2 {
+	for i in 0 .. 2 {
 		num_files = 2
 		// println(files)
 		mut unpack := unpack_header(bytes)!
@@ -76,7 +76,7 @@ pub fn extract_archive(path string) ! {
 
 		// println('$i, $num_files')
 
-		if i == num_files-1 {
+		if i == num_files - 1 {
 			break
 		}
 		for bytes.first() == `\0` {
@@ -110,11 +110,11 @@ pub fn extract_archive(path string) ! {
 			os.chown('${os.dir(path)}/${file['name']}', file['uid'].int(), file['gid'].int())!
 		}
 	}
-
-	
 }
 
 fn calculate_file_count(bytes []u8) !int {
+	// TODO find a different form of calculation to prevent
+	// [otential issues
 	mut tmp := bytes.clone()
 	mut i := 0
 	mut num := 0
@@ -123,9 +123,9 @@ fn calculate_file_count(bytes []u8) !int {
 		h := unpack_header(tmp)!
 		size := int(strconv.parse_int(h['size'], 8, 64)!)
 		tmp.delete_many(0, 512)
-		tmp.delete_many(i, i+size)
+		tmp.delete_many(i, i + size)
 		if size < 512 {
-			tmp.delete_many(i, 512-size)
+			tmp.delete_many(i, 512 - size)
 		}
 		if tmp.filter(it != `\0`).len == 0 {
 			break
@@ -133,35 +133,34 @@ fn calculate_file_count(bytes []u8) !int {
 		num++
 	}
 	return num
-
 }
 
 fn unpack_header(header []u8) !map[string]string {
 	h_entries := {
-		'name': 100
-		'mode': 8
-		'uid': 8
-		'gid': 8
-		'size': 12
-		'mtime': 12
-		'checksum': 8
-		'typeflag': 1
-		'linkname': 100
-		'magic': 6
-		'version': 2
-		'uname': 32
-		'gname': 32
-		'devmajor': 8
-		'devminor': 8
-		'atime': 12
-		'ctime': 12
-		'offset': 12
-		'longnames': 4
-		'unused': 1
-		'sparse': 96
+		'name':       100
+		'mode':       8
+		'uid':        8
+		'gid':        8
+		'size':       12
+		'mtime':      12
+		'checksum':   8
+		'typeflag':   1
+		'linkname':   100
+		'magic':      6
+		'version':    2
+		'uname':      32
+		'gname':      32
+		'devmajor':   8
+		'devminor':   8
+		'atime':      12
+		'ctime':      12
+		'offset':     12
+		'longnames':  4
+		'unused':     1
+		'sparse':     96
 		'isextended': 1
-		'realsize': 12
-		'pad': 17
+		'realsize':   12
+		'pad':        17
 	}
 	mut location := 0
 
@@ -169,7 +168,7 @@ fn unpack_header(header []u8) !map[string]string {
 
 	for n, s in h_entries {
 		// header_arr << header[location..location+s].bytestr()
-		header_map[n] = header[location..location+s].filter(it != `\0`).bytestr()
+		header_map[n] = header[location..location + s].filter(it != `\0`).bytestr()
 		location += s
 	}
 	return header_map //.filter(it[0].ascii_str() != '\0')
@@ -193,7 +192,7 @@ pub fn make_archive(output string, files []string) ! {
 		contents += add_file(file, mut tar_out)!
 
 		// if os.is_dir(file) {
-		// 	// file_type = 
+		// 	// file_type =
 		// 	subfiles := os.ls(file)!
 		// 	add_directory(subfiles, mut tar_out)!
 		// } else {
@@ -229,7 +228,7 @@ fn add_directory(directory string, mut output os.File) !string {
 	mut attr := C.stat{}
 	unsafe { C.stat(&char(name.str), &attr) }
 	// println(attr)
-	contents += '$name'
+	contents += '${name}'
 	mode := '${attr.st_mode:o}'[1..5]
 	// println('${mode:07o}')
 	contents += '${mode}\0'
@@ -239,7 +238,7 @@ fn add_directory(directory string, mut output os.File) !string {
 	contents += '${attr.st_mtime:o}\0'
 	contents += '        ' // checksum placeholder
 	contents += '5\0'
-	for _ in 0..100 {
+	for _ in 0 .. 100 {
 		contents += '\0'
 	}
 	contents += 'ustar'
@@ -250,7 +249,7 @@ fn add_directory(directory string, mut output os.File) !string {
 	for _ in username.len .. 32 {
 		contents += '\0'
 	}
-	
+
 	// TODO get group name instead
 	contents += '${username}'
 	for _ in username.len .. 33 {
@@ -278,14 +277,12 @@ fn add_directory(directory string, mut output os.File) !string {
 	// })
 }
 
-
-
 fn add_file(path string, mut tar_out os.File) !string {
 	mut contents := ''
 	mut files := [path]
 
 	// for files.len > 0 {
-		
+
 	// }
 
 	for file in files {
@@ -328,14 +325,12 @@ fn add_file(path string, mut tar_out os.File) !string {
 		// if file_type == 5 {
 		// 	name = file
 		// }
-		
 
 		for _ in name.len .. 100 {
 			name += '\0'
 		}
 		contents += name
 
-		
 		println(mode)
 		contents += '${mode:07}\0'
 		contents += '${attr.st_uid:07o}\0'
@@ -350,7 +345,7 @@ fn add_file(path string, mut tar_out os.File) !string {
 		// } else if file_type == 5 {
 		// 	contents += '5'
 		// }
-		for _ in 0..100 {
+		for _ in 0 .. 100 {
 			contents += '\0'
 		}
 		contents += 'ustar'
@@ -362,7 +357,7 @@ fn add_file(path string, mut tar_out os.File) !string {
 		for _ in username.len .. 32 {
 			contents += '\0'
 		}
-		
+
 		// TODO get group name instead
 		contents += '${username}'
 		for _ in username.len .. 33 {
@@ -390,22 +385,22 @@ fn add_file(path string, mut tar_out os.File) !string {
 		}
 
 		// if file_type == 0 {
-			// msg := os.read_file(file)!
-			// contents += os.read_file(file)!
-			// for _ in msg.len .. 512 {
-			// 	contents += '\0'
-			// }
+		// msg := os.read_file(file)!
+		// contents += os.read_file(file)!
+		// for _ in msg.len .. 512 {
+		// 	contents += '\0'
+		// }
 	}
 	return contents
 
 	// println(files)
-	
 
 	// 	// header = ''
 	// // }
 	// tar_out.write(contents.bytes())!
 }
 
+//
 fn chksum(bytes string) int {
 	mut sum := 0
 
